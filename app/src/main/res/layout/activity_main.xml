@@ -23,13 +23,14 @@
             android:layout_width="90dp"
             android:layout_height="90dp"
             android:layout_margin="5dp"
-            android:text="recyclerview"/>
+            android:text="recyclerlview"/>
 
         <Button
             android:id="@+id/button3"
             android:layout_width="90dp"
             android:layout_height="90dp"
-            android:layout_margin="5dp" />
+            android:layout_margin="5dp"
+            android:text="recyclergview" />
 
         <Button
             android:id="@+id/button4"

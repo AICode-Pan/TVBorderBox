@@ -4,11 +4,11 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
 import com.custom.borderbox.activity.ListViewActivity;
-import com.custom.borderbox.activity.RecyclerViewActivity;
+import com.custom.borderbox.activity.RecyclerGViewActivity;
+import com.custom.borderbox.activity.RecyclerLViewActivity;
 
 /**
  * <pre>
@@ -29,6 +29,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
         findViewById(R.id.button1).setOnClickListener(this);
         findViewById(R.id.button2).setOnClickListener(this);
+        findViewById(R.id.button3).setOnClickListener(this);
     }
 
     @Override
@@ -40,7 +41,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 startActivity(intent);
                 break;
             case R.id.button2:
-                intent.setClass(this, RecyclerViewActivity.class);
+                intent.setClass(this, RecyclerLViewActivity.class);
+                startActivity(intent);
+                break;
+            case R.id.button3:
+                intent.setClass(this, RecyclerGViewActivity.class);
                 startActivity(intent);
                 break;
         }

@@ -51,6 +51,7 @@ public class BorderView extends View {
                                 @Override
                                 public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                                     super.onScrollStateChanged(recyclerView, newState);
+                                    Log.d(TAG, "newState : " + newState);
                                     switch (newState) {
                                         case RecyclerView.SCROLL_STATE_SETTLING://自动滚动开始
                                             Log.d(TAG, "RecyclerView.SCROLL_STATE_SETTLING");

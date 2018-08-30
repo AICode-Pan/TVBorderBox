@@ -5,6 +5,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -18,20 +19,19 @@ import com.custom.borderbox.R;
 /**
  * <pre>
  *     author : panbeixing
- *     time : 2018/8/29
+ *     time : 2018/8/30
  *     desc :
  *     version : 1.0
  * </pre>
  */
 
-public class RecyclerViewActivity extends Activity {
+public class RecyclerGViewActivity extends Activity {
     private RecyclerView recyclerView;
     private RAdapter mAdapter;
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         recyclerView = new RecyclerView(this);
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        linearLayoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
+        GridLayoutManager linearLayoutManager = new GridLayoutManager(this, 5);
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setPadding(20, 20, 20, 20);
         setContentView(recyclerView);
