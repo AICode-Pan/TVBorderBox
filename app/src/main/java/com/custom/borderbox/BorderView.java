@@ -64,9 +64,14 @@ public class BorderView extends View {
     }
 
     private Rect lastRect;
+
     private void attachFocusBox(View oldFocus, View newFocus) {
         fromRect = findViewtoRect(oldFocus);
         toRect = findViewtoRect(newFocus);
+
+        if (fromRect == null && toRect == null) {
+            return;
+        }
 
         if (fromRect != null) {
             fromRect.left = fromRect.left - borderWidth;
@@ -83,12 +88,13 @@ public class BorderView extends View {
 
         if (lastRect != null) {
             if (lastRect.contains(toRect)) {
-                Log.i(TAG, "attachFocusBox toRect : " + toRect + " ,lastRect : " + lastRect);
                 Log.e(TAG, "toRect = lastRect");
                 return;
             }
         }
 
+        // 重新绘制之前，初始化时间值，重新计算位移动画
+        mStartTime = SystemClock.uptimeMillis();
         invalidate();
     }
 
@@ -118,6 +124,7 @@ public class BorderView extends View {
 
     private long mStartTime = -1;
     private long mDuration = 200;
+    private int canvasStatus = 0; //画布绘制状态 0 未绘制;1 正在绘制; 2 绘制完毕
     private Rect translateRect = null;
 
     @Override
@@ -128,24 +135,31 @@ public class BorderView extends View {
         paint.setStyle(Paint.Style.STROKE);//设置空心
         paint.setStrokeWidth(5);//设置画笔粗细
 
-        if (toRect == null || lastRect == null || fromRect == null) {
-            Log.i(TAG, "draw toRect : " + toRect + " ,lastRect : " + lastRect + " ,fromRect : " + fromRect);
-            lastRect = fromRect;
-            if (toRect != null && fromRect == null) {
-                canvas.drawRect(toRect, paint);
-                return;
-            }
+        if (toRect == null) {
+            return;
         }
 
-        // 初始化时间值
-        if (mStartTime == -1) {
-            mStartTime = SystemClock.uptimeMillis();
+        if (toRect != null && fromRect == null) {
+            lastRect = toRect;
+            canvas.drawRect(toRect, paint);
+            return;
         }
+
         long curTime = SystemClock.uptimeMillis();
         // t为一个0到1均匀变化的值
         float t = (curTime - mStartTime) / (float) mDuration;
         t = Math.max(0, Math.min(t, 1));
 
+        if (canvasStatus == 1) {
+            lastRect = translateRect;
+        }
+        if (lastRect == null) {
+            if (fromRect != null) {
+                lastRect = fromRect;
+            } else {
+                return;
+            }
+        }
         int left = (int) lerp(lastRect.left, toRect.left, t);
         int top = (int) lerp(lastRect.top, toRect.top, t);
         int right = (int) lerp(lastRect.right, toRect.right, t);
@@ -155,6 +169,7 @@ public class BorderView extends View {
             done = false;
         }
         if (0 <= t && t < 1) {
+            canvasStatus = 1;
             done = false;
             // 保存画布，方便下次绘制
             canvas.save();
@@ -169,9 +184,9 @@ public class BorderView extends View {
             canvas.drawRect(translateRect, paint);
             canvas.restore();
         } else {
-            canvas.drawRect(toRect, paint);
-            mStartTime = -1;
             lastRect = toRect;
+            canvasStatus = 2;
+            canvas.drawRect(toRect, paint);
         }
 
         if (!done) {

@@ -4,9 +4,11 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 
 import com.custom.borderbox.activity.ListViewActivity;
+import com.custom.borderbox.activity.RecyclerViewActivity;
 
 /**
  * <pre>
@@ -26,16 +28,22 @@ public class MainActivity extends Activity implements View.OnClickListener {
         mBorderView = new BorderView(this);
 
         findViewById(R.id.button1).setOnClickListener(this);
+        findViewById(R.id.button2).setOnClickListener(this);
     }
 
     @Override
     public void onClick(View v) {
+        Intent intent = new Intent();
         switch (v.getId()) {
             case R.id.button1:
-                Intent intent = new Intent();
                 intent.setClass(this, ListViewActivity.class);
                 startActivity(intent);
                 break;
+            case R.id.button2:
+                intent.setClass(this, RecyclerViewActivity.class);
+                startActivity(intent);
+                break;
         }
+
     }
 }

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,14 +32,17 @@ public class ListViewActivity extends Activity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_listview);
-        mListView = findViewById(R.id.listview);
+
+        mListView = new ListView(this);
         mListView.setFocusable(false);
         mListView.setDivider(null);
         mListView.setDividerHeight(20);
+        mListView.setPadding(20, 20, 20, 20);
+        setContentView(mListView);
         mListView.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                Log.d("BorderView", "onItemSelected view : " + view);
                 view.requestFocus();
             }
 
@@ -89,6 +93,7 @@ public class ListViewActivity extends Activity {
             }
 
             holder.button.setText(position + "");
+            holder.button.setId(position);
             return convertView;
         }
 

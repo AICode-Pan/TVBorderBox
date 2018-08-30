@@ -11,7 +11,7 @@
         android:layout_width="290dp"
         android:layout_height="290dp"
         android:layout_margin="5dp"
-        android:background="@drawable/btn_background"/>
+        android:text="listview"/>
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -23,21 +23,19 @@
             android:layout_width="90dp"
             android:layout_height="90dp"
             android:layout_margin="5dp"
-            android:background="@drawable/btn_background" />
+            android:text="recyclerview"/>
 
         <Button
             android:id="@+id/button3"
             android:layout_width="90dp"
             android:layout_height="90dp"
-            android:layout_margin="5dp"
-            android:background="@drawable/btn_background" />
+            android:layout_margin="5dp" />
 
         <Button
             android:id="@+id/button4"
             android:layout_width="90dp"
             android:layout_height="90dp"
-            android:layout_margin="5dp"
-            android:background="@drawable/btn_background" />
+            android:layout_margin="5dp" />
     </LinearLayout>
 
     <LinearLayout
@@ -49,14 +47,12 @@
             android:id="@+id/button5"
             android:layout_width="90dp"
             android:layout_height="190dp"
-            android:layout_margin="5dp"
-            android:background="@drawable/btn_background" />
+            android:layout_margin="5dp" />
 
         <Button
             android:id="@+id/button6"
             android:layout_width="90dp"
             android:layout_height="90dp"
-            android:layout_margin="5dp"
-            android:background="@drawable/btn_background" />
+            android:layout_margin="5dp" />
     </LinearLayout>
 </LinearLayout>
