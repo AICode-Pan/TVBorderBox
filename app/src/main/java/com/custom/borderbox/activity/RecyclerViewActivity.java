@@ -33,6 +33,7 @@ public class RecyclerViewActivity extends Activity {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
         recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView.setPadding(20, 20, 20, 20);
         setContentView(recyclerView);
         mAdapter = new RAdapter(this);
         recyclerView.setAdapter(mAdapter);
@@ -54,7 +55,8 @@ public class RecyclerViewActivity extends Activity {
         @Override
         public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
             ItemHolder itemHolder = (ItemHolder) holder;
-//            itemHolder.button.setText(position + "");
+            itemHolder.button.setId(position);
+            itemHolder.button.setText(position + "");
         }
 
         @Override
@@ -66,7 +68,7 @@ public class RecyclerViewActivity extends Activity {
             private Button button;
             public ItemHolder(View itemView) {
                 super(itemView);
-                button = itemView.findViewById(R.id.button1);
+                button = itemView.findViewById(R.id.item_button);
             }
         }
     }

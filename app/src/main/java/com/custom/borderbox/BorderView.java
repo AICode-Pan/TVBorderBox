@@ -1,22 +1,17 @@
 package com.custom.borderbox;
 
-import android.animation.Animator;
+import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
-import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 
 /**
@@ -36,6 +31,7 @@ public class BorderView extends View {
     private int borderWidth = 5;
     private int statusBarHeight = 0;
 
+    @SuppressLint("NewApi")
     public BorderView(Activity activity) {
         super(activity);
 
@@ -70,6 +66,13 @@ public class BorderView extends View {
         toRect = findViewtoRect(newFocus);
 
         if (fromRect == null && toRect == null) {
+            return;
+        }
+
+        if (toRect.right >= getRight()
+                || toRect.bottom >= getBottom()
+                || toRect.left <= 0
+                || toRect.top <= 0) {
             return;
         }
 
