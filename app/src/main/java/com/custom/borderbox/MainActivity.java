@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.View;
 
+import com.custom.borderbox.activity.GridViewActivity;
 import com.custom.borderbox.activity.ListViewActivity;
 import com.custom.borderbox.activity.RecyclerGViewActivity;
 import com.custom.borderbox.activity.RecyclerLViewActivity;
@@ -30,6 +31,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         findViewById(R.id.button1).setOnClickListener(this);
         findViewById(R.id.button2).setOnClickListener(this);
         findViewById(R.id.button3).setOnClickListener(this);
+        findViewById(R.id.button4).setOnClickListener(this);
     }
 
     @Override
@@ -46,6 +48,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 break;
             case R.id.button3:
                 intent.setClass(this, RecyclerGViewActivity.class);
+                startActivity(intent);
+                break;
+            case R.id.button4:
+                intent.setClass(this, GridViewActivity.class);
                 startActivity(intent);
                 break;
         }

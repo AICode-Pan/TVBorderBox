@@ -4,14 +4,13 @@ import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
-import android.widget.ListView;
+import android.widget.GridView;
 
 import com.custom.borderbox.BorderView;
 import com.custom.borderbox.R;
@@ -19,47 +18,34 @@ import com.custom.borderbox.R;
 /**
  * <pre>
  *     author : panbeixing
- *     time : 2018/8/25
+ *     time : 2018/8/30
  *     desc :
  *     version : 1.0
  * </pre>
  */
 
-public class ListViewActivity extends Activity {
-    private ListView mListView;
-    private ListAdapter mAdapter;
+public class GridViewActivity extends Activity {
+    private GridView mGridView;
+    private GAdapter mAdapter;
     private BorderView borderView;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mListView = new ListView(this);
-        mListView.setFocusable(false);
-        mListView.setDivider(null);
-        mListView.setDividerHeight(20);
-        mListView.setPadding(20, 20, 20, 20);
-        setContentView(mListView);
-        mListView.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                Log.d("BorderView", "onItemSelected view : " + view);
-                view.requestFocus();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
-        mAdapter = new ListAdapter(this);
-        mListView.setAdapter(mAdapter);
+        mGridView = new GridView(this);
+        mGridView.setFocusable(false);
+        mGridView.setNumColumns(4);
+        mGridView.setPadding(20, 20, 20, 20);
+        setContentView(mGridView);
+        mAdapter = new GAdapter(this);
+        mGridView.setAdapter(mAdapter);
         borderView = new BorderView(this);
     }
 
-    private class ListAdapter extends BaseAdapter {
+    private class GAdapter extends BaseAdapter {
 
         private LayoutInflater mInflater;
-        public ListAdapter(Context context) {
+        public GAdapter(Context context) {
             mInflater = LayoutInflater.from(context);
         }
 

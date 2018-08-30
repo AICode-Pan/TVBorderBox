@@ -36,7 +36,8 @@
             android:id="@+id/button4"
             android:layout_width="90dp"
             android:layout_height="90dp"
-            android:layout_margin="5dp" />
+            android:layout_margin="5dp"
+            android:text="gridview"/>
     </LinearLayout>
 
     <LinearLayout

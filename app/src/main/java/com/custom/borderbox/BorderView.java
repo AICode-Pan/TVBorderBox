@@ -95,7 +95,7 @@ public class BorderView extends View {
         fromRect = findViewtoRect(oldFocus);
         toRect = findViewtoRect(newFocus);
 
-        if (fromRect == null && toRect == null) {
+        if (toRect == null) {
             return;
         }
 
