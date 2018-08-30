@@ -9,6 +9,7 @@ import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -39,8 +40,36 @@ public class BorderView extends View {
         rootView = decorView.getViewTreeObserver();
         rootView.addOnGlobalFocusChangeListener(new ViewTreeObserver.OnGlobalFocusChangeListener() {
             @Override
-            public void onGlobalFocusChanged(View oldFocus, View newFocus) {
+            public void onGlobalFocusChanged(final View oldFocus, final View newFocus) {
                 Log.d(TAG, "GlobalFocusChanged oldFocus : " + oldFocus + " ,newFocus : " + newFocus);
+
+                if (newFocus != null) {
+                    try {
+                        if (newFocus.getParent() instanceof RecyclerView) {
+                            RecyclerView recyclerView = (RecyclerView) newFocus.getParent();
+                            recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+                                @Override
+                                public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                                    super.onScrollStateChanged(recyclerView, newState);
+                                    switch (newState) {
+                                        case RecyclerView.SCROLL_STATE_SETTLING://自动滚动开始
+                                            Log.d(TAG, "RecyclerView.SCROLL_STATE_SETTLING");
+                                            break;
+                                        case RecyclerView.SCROLL_STATE_DRAGGING://正在被外部拖拽,一般为用户正在用手指滚动
+                                            Log.d(TAG, "RecyclerView.SCROLL_STATE_DRAGGING");
+                                            break;
+                                        case RecyclerView.SCROLL_STATE_IDLE://正在滚动
+                                            Log.d(TAG, "RecyclerView.SCROLL_STATE_IDLE");
+                                            break;
+                                    }
+                                }
+                            });
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Focus Change has error , " + e.getMessage());
+                    }
+
+                }
                 attachFocusBox(oldFocus, newFocus);
             }
         });
@@ -176,7 +205,6 @@ public class BorderView extends View {
             done = false;
             // 保存画布，方便下次绘制
             canvas.save();
-//            canvas.translate(translateX, translateY);
             if (translateRect == null) {
                 translateRect = new Rect();
             }
