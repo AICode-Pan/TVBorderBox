@@ -34,6 +34,7 @@ public class BorderView extends View {
     private long startTime = -1;
     private long duration = 200; //位移动画时间
     private int canvasStatus = 0; //画布绘制状态 0 未绘制;1 正在绘制; 2 绘制完毕
+    private boolean stopCanvas = false;
     private Rect translateRect = null;
     private Rect currentRect = null;
     private CanvasHandler canvasHandler;
@@ -52,7 +53,7 @@ public class BorderView extends View {
         rootView.addOnScrollChangedListener(new ViewTreeObserver.OnScrollChangedListener() {
             @Override
             public void onScrollChanged() {
-                Log.e(TAG, "onScrollChanged " + contentView.findFocus());
+                stopCanvas = true;
                 if (canvasHandler.hasMessages(0)) {
                     canvasHandler.removeMessages(0);
                 }
@@ -64,11 +65,9 @@ public class BorderView extends View {
             @Override
             public void onGlobalFocusChanged(final View oldFocus, final View newFocus) {
                 Log.d(TAG, "GlobalFocusChanged oldFocus : " + oldFocus + " ,newFocus : " + newFocus);
-                canvasHandler.onFocusChange(oldFocus, newFocus);
-                canvasHandler.sendEmptyMessageDelayed(0, 30);
+                attachFocusBox(oldFocus, newFocus);
             }
         });
-
 
 
 //        TODO 状态栏的高度可能会影响view的绘制
@@ -97,21 +96,20 @@ public class BorderView extends View {
             return;
         }
 
-        if (currentRect != null) {
+        //如果borderview当前位置不为null，且和要位移的位置相同，直接return不处理。
+        if (currentRect != null) {stopCanvas = false;
             if (currentRect.contains(toRect)) {
                 Log.d(TAG, "toRect = currentRect");
                 return;
             }
         }
 
-        Log.i(TAG, "invalidate");
-        // 重新绘制之前，初始化时间值，重新计算位移动画
-        startTime = SystemClock.uptimeMillis();
-        invalidate();
+        startInvalidate();
     }
 
     /**
      * 将View的位置转化成Rect
+     *
      * @param view
      * @return
      */
@@ -128,6 +126,7 @@ public class BorderView extends View {
 
     /**
      * 设置BorderView的位置大小
+     *
      * @param rect
      * @return
      */
@@ -141,6 +140,7 @@ public class BorderView extends View {
 
     /**
      * 设置画笔
+     *
      * @return Paint
      */
     public Paint getPaint() {
@@ -154,6 +154,17 @@ public class BorderView extends View {
         return paint;
     }
 
+    /**
+     * 开始绘制borderview
+     */
+    private void startInvalidate() {
+        Log.i(TAG, "startInvalidate");
+        // 重新绘制之前，初始化时间值，重新计算位移动画
+        startTime = SystemClock.uptimeMillis();
+        stopCanvas = false;
+        invalidate();
+    }
+
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
@@ -162,7 +173,9 @@ public class BorderView extends View {
             return;
         }
 
-        if (toRect != null && fromRect == null) {
+        //如果目标view不为空，但是fromRect 和 currentRect 为空的话，直接绘制到
+        if (toRect != null
+                && fromRect == null && currentRect == null) {
             currentRect = toRect;
             canvas.drawRect(toRect, getPaint());
             return;
@@ -185,6 +198,7 @@ public class BorderView extends View {
         int right = (int) lerp(currentRect.right, toRect.right, t);
         int bottom = (int) lerp(currentRect.bottom, toRect.bottom, t);
         boolean done = true;
+        Log.i(TAG, "t : " + t);
         if (0 <= t && t < 1) {
             canvasStatus = 1;
             done = false;
@@ -207,7 +221,8 @@ public class BorderView extends View {
             canvas.drawRect(toRect, getPaint());
         }
 
-        if (!done) {
+        Log.i(TAG, "done :" + done + " ,stopCanvas : " + stopCanvas);
+        if (!done && !stopCanvas) {
             invalidate();
         }
     }
@@ -219,14 +234,9 @@ public class BorderView extends View {
 
     private static class CanvasHandler extends Handler {
         private WeakReference<BorderView> borderViewWR;
+
         public CanvasHandler(WeakReference<BorderView> borderViewWeakReference) {
             this.borderViewWR = borderViewWeakReference;
-        }
-
-        private View oldFocus, newFocus;
-        public void onFocusChange(View oldFocus, View newFocus) {
-            this.oldFocus = oldFocus;
-            this.newFocus = newFocus;
         }
 
         @Override
@@ -238,7 +248,9 @@ public class BorderView extends View {
 
             switch (msg.what) {
                 case 0:
-                    borderViewWR.get().attachFocusBox(oldFocus, newFocus);
+//                    borderViewWR.get().attachFocusBox(oldFocus, newFocus);
+                    Log.i(TAG, "handleMessage");
+                    borderViewWR.get().attachFocusBox(null, borderViewWR.get().contentView.findFocus());
                     break;
             }
         }
