@@ -31,7 +31,7 @@ public class RecyclerGViewActivity extends Activity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         recyclerView = new RecyclerView(this);
-        GridLayoutManager linearLayoutManager = new GridLayoutManager(this, 5);
+        GridLayoutManager linearLayoutManager = new GridLayoutManager(this, 3);
         recyclerView.setLayoutManager(linearLayoutManager);
         recyclerView.setPadding(20, 20, 20, 20);
         setContentView(recyclerView);
