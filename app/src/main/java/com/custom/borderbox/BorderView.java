@@ -1,6 +1,5 @@
 package com.custom.borderbox;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -9,11 +8,12 @@ import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
+
+import java.lang.ref.WeakReference;
 
 /**
  * <pre>
@@ -30,70 +30,61 @@ public class BorderView extends View {
     private FrameLayout contentView;
     private Rect fromRect, toRect;
     private int borderWidth = 5;
-    private int statusBarHeight = 0;
+    private int statusBarHeight = 0; //状态栏高度
+    private long startTime = -1;
+    private long duration = 200; //位移动画时间
+    private int canvasStatus = 0; //画布绘制状态 0 未绘制;1 正在绘制; 2 绘制完毕
+    private Rect translateRect = null;
+    private Rect currentRect = null;
+    private CanvasHandler canvasHandler;
+    private Paint paint;
 
-    @SuppressLint("NewApi")
-    public BorderView(Activity activity) {
+    public BorderView(final Activity activity) {
         super(activity);
 
         View decorView = activity.getWindow().getDecorView();
+        contentView = decorView.findViewById(android.R.id.content);
+        contentView.addView(this);
+        bringToFront();//置于view的最顶部，防止被覆盖
+
+        canvasHandler = new CanvasHandler(new WeakReference<BorderView>(this));
         rootView = decorView.getViewTreeObserver();
+        rootView.addOnScrollChangedListener(new ViewTreeObserver.OnScrollChangedListener() {
+            @Override
+            public void onScrollChanged() {
+                Log.e(TAG, "onScrollChanged " + contentView.findFocus());
+                if (canvasHandler.hasMessages(0)) {
+                    canvasHandler.removeMessages(0);
+                }
+                canvasHandler.sendEmptyMessageDelayed(0, 30);
+            }
+        });
+
         rootView.addOnGlobalFocusChangeListener(new ViewTreeObserver.OnGlobalFocusChangeListener() {
             @Override
             public void onGlobalFocusChanged(final View oldFocus, final View newFocus) {
                 Log.d(TAG, "GlobalFocusChanged oldFocus : " + oldFocus + " ,newFocus : " + newFocus);
-
-                if (newFocus != null) {
-                    try {
-                        if (newFocus.getParent() instanceof RecyclerView) {
-                            RecyclerView recyclerView = (RecyclerView) newFocus.getParent();
-                            recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-                                @Override
-                                public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                                    super.onScrollStateChanged(recyclerView, newState);
-                                    Log.d(TAG, "newState : " + newState);
-                                    switch (newState) {
-                                        case RecyclerView.SCROLL_STATE_SETTLING://自动滚动开始
-                                            Log.d(TAG, "RecyclerView.SCROLL_STATE_SETTLING");
-                                            break;
-                                        case RecyclerView.SCROLL_STATE_DRAGGING://正在被外部拖拽,一般为用户正在用手指滚动
-                                            Log.d(TAG, "RecyclerView.SCROLL_STATE_DRAGGING");
-                                            break;
-                                        case RecyclerView.SCROLL_STATE_IDLE://正在滚动
-                                            Log.d(TAG, "RecyclerView.SCROLL_STATE_IDLE");
-                                            break;
-                                    }
-                                }
-                            });
-                        }
-                    } catch (Exception e) {
-                        Log.e(TAG, "Focus Change has error , " + e.getMessage());
-                    }
-
-                }
-                attachFocusBox(oldFocus, newFocus);
+                canvasHandler.onFocusChange(oldFocus, newFocus);
+                canvasHandler.sendEmptyMessageDelayed(0, 30);
             }
         });
 
-        contentView = decorView.findViewById(android.R.id.content);
-        contentView.addView(this);
-        bringToFront();
 
-        /* 获取状态栏高度——方法 **/
-        //获取status_bar_height资源的ID
-        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
-        if (resourceId > 0) {
-            //根据资源ID获取响应的尺寸值
-            statusBarHeight = getResources().getDimensionPixelSize(resourceId);
-        }
+
+//        TODO 状态栏的高度可能会影响view的绘制
+//        /* 获取状态栏高度——方法 **/
+//        //获取status_bar_height资源的ID
+//        int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
+//        if (resourceId > 0) {
+//            //根据资源ID获取响应的尺寸值
+//            statusBarHeight = getResources().getDimensionPixelSize(resourceId);
+//        }
 
     }
 
-    private Rect lastRect;
-
     private void attachFocusBox(View oldFocus, View newFocus) {
-        fromRect = findViewtoRect(oldFocus);
-        toRect = findViewtoRect(newFocus);
+        fromRect = findViewToRect(oldFocus);
+        toRect = findViewToRect(newFocus);
 
         if (toRect == null) {
             return;
@@ -106,104 +97,98 @@ public class BorderView extends View {
             return;
         }
 
-        if (fromRect != null) {
-            fromRect.left = fromRect.left - borderWidth;
-            fromRect.top = fromRect.top - borderWidth;
-            fromRect.right = fromRect.right + borderWidth;
-            fromRect.bottom = fromRect.bottom + borderWidth;
-        }
-        if (toRect != null) {
-            toRect.left = toRect.left - borderWidth;
-            toRect.top = toRect.top - borderWidth;
-            toRect.right = toRect.right + borderWidth;
-            toRect.bottom = toRect.bottom + borderWidth;
-        }
-
-        if (lastRect != null) {
-            if (lastRect.contains(toRect)) {
-                Log.e(TAG, "toRect = lastRect");
+        if (currentRect != null) {
+            if (currentRect.contains(toRect)) {
+                Log.d(TAG, "toRect = currentRect");
                 return;
             }
         }
 
+        Log.i(TAG, "invalidate");
         // 重新绘制之前，初始化时间值，重新计算位移动画
-        mStartTime = SystemClock.uptimeMillis();
+        startTime = SystemClock.uptimeMillis();
         invalidate();
     }
 
-    public Rect findViewtoRect(View view) {
+    /**
+     * 将View的位置转化成Rect
+     * @param view
+     * @return
+     */
+    public Rect findViewToRect(View view) {
         Rect rect = new Rect();
         if (view == null) {
             return null;
         }
+        //获取rect相对于整个屏幕的位置
         view.getGlobalVisibleRect(rect);
+        setBorderRect(rect);
         return rect;
     }
 
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+    /**
+     * 设置BorderView的位置大小
+     * @param rect
+     * @return
+     */
+    private Rect setBorderRect(Rect rect) {
+        rect.left = rect.left - borderWidth;
+        rect.top = rect.top - borderWidth;
+        rect.right = rect.right + borderWidth;
+        rect.bottom = rect.bottom + borderWidth;
+        return rect;
     }
 
-    @Override
-    protected void dispatchDraw(Canvas canvas) {
-        super.dispatchDraw(canvas);
-    }
+    /**
+     * 设置画笔
+     * @return Paint
+     */
+    public Paint getPaint() {
+        if (paint == null) {
+            paint = new Paint();
+            paint.setStyle(Paint.Style.STROKE);//设置空心
+            paint.setColor(Color.BLUE);
+            paint.setStrokeWidth(5);//设置画笔粗细
+        }
 
-    @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
+        return paint;
     }
-
-    private long mStartTime = -1;
-    private long mDuration = 200;
-    private int canvasStatus = 0; //画布绘制状态 0 未绘制;1 正在绘制; 2 绘制完毕
-    private Rect translateRect = null;
 
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
-        Paint paint = new Paint();
-        paint.setColor(Color.BLUE);
-        paint.setStyle(Paint.Style.STROKE);//设置空心
-        paint.setStrokeWidth(5);//设置画笔粗细
 
         if (toRect == null) {
             return;
         }
 
         if (toRect != null && fromRect == null) {
-            lastRect = toRect;
-            canvas.drawRect(toRect, paint);
+            currentRect = toRect;
+            canvas.drawRect(toRect, getPaint());
             return;
         }
 
         long curTime = SystemClock.uptimeMillis();
         // t为一个0到1均匀变化的值
-        float t = (curTime - mStartTime) / (float) mDuration;
+        float t = (curTime - startTime) / (float) duration;
         t = Math.max(0, Math.min(t, 1));
 
-        if (canvasStatus == 1) {
-            lastRect = translateRect;
-        }
-        if (lastRect == null) {
+        if (currentRect == null) {
             if (fromRect != null) {
-                lastRect = fromRect;
+                currentRect = fromRect;
             } else {
                 return;
             }
         }
-        int left = (int) lerp(lastRect.left, toRect.left, t);
-        int top = (int) lerp(lastRect.top, toRect.top, t);
-        int right = (int) lerp(lastRect.right, toRect.right, t);
-        int bottom = (int) lerp(lastRect.bottom, toRect.bottom, t);
+        int left = (int) lerp(currentRect.left, toRect.left, t);
+        int top = (int) lerp(currentRect.top, toRect.top, t);
+        int right = (int) lerp(currentRect.right, toRect.right, t);
+        int bottom = (int) lerp(currentRect.bottom, toRect.bottom, t);
         boolean done = true;
-        if (t < 1) {
-            done = false;
-        }
         if (0 <= t && t < 1) {
             canvasStatus = 1;
             done = false;
+
             // 保存画布，方便下次绘制
             canvas.save();
             if (translateRect == null) {
@@ -213,12 +198,13 @@ public class BorderView extends View {
             translateRect.top = top;
             translateRect.right = right;
             translateRect.bottom = bottom;
-            canvas.drawRect(translateRect, paint);
+            currentRect = translateRect;
+            canvas.drawRect(translateRect, getPaint());
             canvas.restore();
         } else {
-            lastRect = toRect;
+            currentRect = toRect;
             canvasStatus = 2;
-            canvas.drawRect(toRect, paint);
+            canvas.drawRect(toRect, getPaint());
         }
 
         if (!done) {
@@ -232,9 +218,29 @@ public class BorderView extends View {
     }
 
     private static class CanvasHandler extends Handler {
+        private WeakReference<BorderView> borderViewWR;
+        public CanvasHandler(WeakReference<BorderView> borderViewWeakReference) {
+            this.borderViewWR = borderViewWeakReference;
+        }
+
+        private View oldFocus, newFocus;
+        public void onFocusChange(View oldFocus, View newFocus) {
+            this.oldFocus = oldFocus;
+            this.newFocus = newFocus;
+        }
+
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
+            if (borderViewWR == null && borderViewWR.get() == null) {
+                return;
+            }
+
+            switch (msg.what) {
+                case 0:
+                    borderViewWR.get().attachFocusBox(oldFocus, newFocus);
+                    break;
+            }
         }
     }
 }

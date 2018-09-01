@@ -34,6 +34,8 @@ public class GridViewActivity extends Activity {
 
         mGridView = new GridView(this);
         mGridView.setFocusable(false);
+//        mGridView.setHorizontalSpacing(5); // 设置列表项水平间距
+//        mGridView.setStretchMode(GridView.NO_STRETCH);
         mGridView.setNumColumns(4);
         mGridView.setPadding(20, 20, 20, 20);
         setContentView(mGridView);
@@ -78,9 +80,6 @@ public class GridViewActivity extends Activity {
                 holder = (ViewHolder) convertView.getTag();
             }
 
-            if (position == 0) {
-                holder.button.requestFocus();
-            }
             holder.button.setText(position + "");
             holder.button.setId(position);
             return convertView;
