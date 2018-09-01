@@ -29,11 +29,12 @@ public class BorderView extends View {
     private ViewTreeObserver rootView;
     private FrameLayout contentView;
     private Rect fromRect, toRect;
-    private int borderWidth = 5;
-    private int statusBarHeight = 0; //状态栏高度
+    private int borderSpace = 0;        //边框间距
+    private int borderWidth = 5;        //边框粗细
+    private int statusBarHeight = 0;    //状态栏高度
     private long startTime = -1;
-    private long duration = 200; //位移动画时间
-    private int canvasStatus = 0; //画布绘制状态 0 未绘制;1 正在绘制; 2 绘制完毕
+    private long duration = 200;        //位移动画时间
+    private int canvasStatus = 0;       //画布绘制状态 0 未绘制;1 正在绘制; 2 绘制完毕
     private boolean stopCanvas = false;
     private Rect translateRect = null;
     private Rect currentRect = null;
@@ -97,7 +98,7 @@ public class BorderView extends View {
         }
 
         //如果borderview当前位置不为null，且和要位移的位置相同，直接return不处理。
-        if (currentRect != null) {stopCanvas = false;
+        if (currentRect != null) {
             if (currentRect.contains(toRect)) {
                 Log.d(TAG, "toRect = currentRect");
                 return;
@@ -131,10 +132,10 @@ public class BorderView extends View {
      * @return
      */
     private Rect setBorderRect(Rect rect) {
-        rect.left = rect.left - borderWidth;
-        rect.top = rect.top - borderWidth;
-        rect.right = rect.right + borderWidth;
-        rect.bottom = rect.bottom + borderWidth;
+        rect.left = rect.left - borderSpace;
+        rect.top = rect.top - borderSpace;
+        rect.right = rect.right + borderSpace;
+        rect.bottom = rect.bottom + borderSpace;
         return rect;
     }
 
@@ -148,7 +149,7 @@ public class BorderView extends View {
             paint = new Paint();
             paint.setStyle(Paint.Style.STROKE);//设置空心
             paint.setColor(Color.BLUE);
-            paint.setStrokeWidth(5);//设置画笔粗细
+            paint.setStrokeWidth(borderWidth);//设置画笔粗细
         }
 
         return paint;
@@ -193,10 +194,7 @@ public class BorderView extends View {
                 return;
             }
         }
-        int left = (int) lerp(currentRect.left, toRect.left, t);
-        int top = (int) lerp(currentRect.top, toRect.top, t);
-        int right = (int) lerp(currentRect.right, toRect.right, t);
-        int bottom = (int) lerp(currentRect.bottom, toRect.bottom, t);
+
         boolean done = true;
         Log.i(TAG, "t : " + t);
         if (0 <= t && t < 1) {
@@ -205,15 +203,8 @@ public class BorderView extends View {
 
             // 保存画布，方便下次绘制
             canvas.save();
-            if (translateRect == null) {
-                translateRect = new Rect();
-            }
-            translateRect.left = left;
-            translateRect.top = top;
-            translateRect.right = right;
-            translateRect.bottom = bottom;
-            currentRect = translateRect;
-            canvas.drawRect(translateRect, getPaint());
+            currentRect = getTranslateRect(currentRect, toRect, t);
+            canvas.drawRect(currentRect, getPaint());
             canvas.restore();
         } else {
             currentRect = toRect;
@@ -225,6 +216,27 @@ public class BorderView extends View {
         if (!done && !stopCanvas) {
             invalidate();
         }
+    }
+
+    /**
+     * 根据当前的时间差值，得到将要绘制到画布上的borderview的位置
+     * @param rect
+     * @param toRect
+     * @param t
+     */
+    private Rect getTranslateRect(Rect rect, Rect toRect, float t) {
+        if (translateRect == null) {
+            translateRect = new Rect();
+        }
+        int left = (int) lerp(rect.left, toRect.left, t);
+        int top = (int) lerp(rect.top, toRect.top, t);
+        int right = (int) lerp(rect.right, toRect.right, t);
+        int bottom = (int) lerp(rect.bottom, toRect.bottom, t);
+        translateRect.left = left;
+        translateRect.top = top;
+        translateRect.right = right;
+        translateRect.bottom = bottom;
+        return translateRect;
     }
 
     // 数制差
